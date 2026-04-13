@@ -1,0 +1,391 @@
+import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Upload, Download, Share2, Settings, Info, Zap, RotateCw, Trash2, Copy, Check, ChevronDown } from 'lucide-react';
+import BeforeAfterSlider from '@/components/BeforeAfterSlider';
+import DeviceSelector from '@/components/DeviceSelector';
+import CategorySelector from '@/components/CategorySelector';
+import StyleSelector from '@/components/StyleSelector';
+import ProgressBar from '@/components/ProgressBar';
+import HistoryPanel from '@/components/HistoryPanel';
+import ExportPanel from '@/components/ExportPanel';
+import SettingsPanel from '@/components/SettingsPanel';
+import DeveloperSection from '@/components/DeveloperSection';
+
+/**
+ * Smart AI Photo Enhancer - Main Application
+ * Design: Cyberpunk Minimalism
+ * - Deep black background (#0a0e27) with neon blue (#00d9ff) and green (#00ff88) accents
+ * - Minimal UI with grid background pattern
+ * - Functional animations and glowing effects
+ */
+export default function Home() {
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
+  const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
+  const [device, setDevice] = useState('iPhone 17 Pro Max');
+  const [category, setCategory] = useState('Selfie');
+  const [style, setStyle] = useState('Smart Presets');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [history, setHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showDeveloper, setShowDeveloper] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showHeroInfo, setShowHeroInfo] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load settings from localStorage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('photoEnhancerSettings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setDevice(settings.device || 'iPhone 17 Pro Max');
+      setCategory(settings.category || 'Selfie');
+      setStyle(settings.style || 'Smart Presets');
+    }
+  }, []);
+
+  // Save settings to localStorage
+  const saveSettings = () => {
+    localStorage.setItem('photoEnhancerSettings', JSON.stringify({
+      device,
+      category,
+      style,
+    }));
+  };
+
+  useEffect(() => {
+    saveSettings();
+  }, [device, category, style]);
+
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageData = event.target?.result as string;
+        setOriginalImage(imageData);
+        setEnhancedImage(null);
+        setShowHeroInfo(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Simulate image enhancement
+  const handleEnhance = async () => {
+    if (!originalImage) return;
+
+    setIsProcessing(true);
+    setProgress(0);
+
+    // Simulate processing with progress
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + Math.random() * 30;
+      });
+    }, 300);
+
+    // Simulate API call delay
+    setTimeout(() => {
+      clearInterval(progressInterval);
+      setProgress(100);
+      setEnhancedImage(originalImage); // In real app, this would be the enhanced image from API
+      setIsProcessing(false);
+
+      // Add to history
+      const newHistoryItem = {
+        id: Date.now(),
+        original: originalImage,
+        enhanced: originalImage,
+        device,
+        category,
+        style,
+        timestamp: new Date().toLocaleString(),
+      };
+      setHistory([newHistoryItem, ...history.slice(0, 9)]);
+
+      // Show success notification
+      setTimeout(() => setProgress(0), 1000);
+    }, 3000);
+  };
+
+  // Generate automatic prompt
+  const generatePrompt = () => {
+    return `حسّن الصورة باحتراف شديد كما لو أنها ملتقطة بكاميرا ${device}، بفئة ${category}، بأسلوب ${style}، مع تحسين بصري طبيعي جداً يركز على وضوح الوجه، التفاصيل الدقيقة، الديناميك رينج، والإضاءة الواقعية، مع الحفاظ الكامل 100% على ملامح الوجه، لون البشرة الطبيعي، ونسيج الجلد الحقيقي بدون أي تنعيم أو تأثير بلاستيكي.`;
+  };
+
+  // Copy prompt to clipboard
+  const copyPromptToClipboard = () => {
+    const prompt = generatePrompt();
+    navigator.clipboard.writeText(prompt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-foreground grid-bg">
+      {/* Header */}
+      <header className="border-b border-primary bg-secondary/30 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Zap className="w-6 h-6 text-accent animate-pulse" />
+            <h1 className="text-2xl font-bold text-primary tracking-wider">SMART AI PHOTO ENHANCER</h1>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="btn-cyberpunk p-2"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="btn-cyberpunk p-2"
+              title="History"
+            >
+              <RotateCw className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowDeveloper(!showDeveloper)}
+              className="btn-cyberpunk p-2"
+              title="About Developer"
+            >
+              <Info className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      {showHeroInfo && !originalImage && (
+        <section className="relative overflow-hidden py-16 md:py-24">
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-20"
+            style={{
+              backgroundImage: 'url(https://d2xsxph8kpxj0f.cloudfront.net/310519663070243797/D7mDyxvneDrjvQPLRfmdfv/hero-background-gvGDVtZmJKXjTHMBo9m69f.webp)',
+            }}
+          />
+          <div className="relative container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <h2 className="text-4xl md:text-5xl font-bold text-primary leading-tight">
+                    Transform Your Photos with AI
+                  </h2>
+                  <p className="text-lg text-muted-foreground">
+                    Professional photo enhancement powered by advanced artificial intelligence. Enhance clarity, lighting, and details while preserving natural appearance.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-bold text-accent tracking-wider">KEY FEATURES</h3>
+                  <ul className="space-y-2 text-sm text-foreground">
+                    <li className="flex items-center gap-2">
+                      <span className="text-accent">✓</span> AI-Powered Enhancement
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-accent">✓</span> Face & Skin Optimization
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-accent">✓</span> Dynamic Lighting Control
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-accent">✓</span> Up to 8K Resolution Export
+                    </li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="btn-cyberpunk inline-flex items-center gap-2 px-6 py-3 text-base"
+                >
+                  <Upload className="w-5 h-5" />
+                  Get Started
+                </button>
+              </div>
+
+              <div className="hidden md:block">
+                <img
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310519663070243797/D7mDyxvneDrjvQPLRfmdfv/feature-enhancement-mR42MnBu6wqoKmuDHAt3Wr.webp"
+                  alt="Before and After"
+                  className="w-full rounded border border-primary/30 shadow-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Panel - Controls */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-card border border-primary/30 p-4 rounded">
+              <h2 className="text-sm font-bold text-primary mb-4 tracking-wider">DEVICE SELECT</h2>
+              <DeviceSelector value={device} onChange={setDevice} />
+            </div>
+
+            <div className="bg-card border border-primary/30 p-4 rounded">
+              <h2 className="text-sm font-bold text-primary mb-4 tracking-wider">CATEGORY</h2>
+              <CategorySelector value={category} onChange={setCategory} />
+            </div>
+
+            <div className="bg-card border border-primary/30 p-4 rounded">
+              <h2 className="text-sm font-bold text-primary mb-4 tracking-wider">STYLE</h2>
+              <StyleSelector value={style} onChange={setStyle} />
+            </div>
+
+            {/* Auto-generated Prompt */}
+            <div className="bg-card border border-accent/30 p-4 rounded">
+              <h2 className="text-sm font-bold text-accent mb-3 tracking-wider">AI PROMPT</h2>
+              <div className="bg-secondary/50 p-3 rounded text-xs text-muted-foreground mb-3 max-h-32 overflow-y-auto">
+                {generatePrompt()}
+              </div>
+              <button
+                onClick={copyPromptToClipboard}
+                className="w-full btn-cyberpunk text-xs flex items-center justify-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" /> Copy Prompt
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Center Panel - Image Display and Upload */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Upload Section */}
+            {!originalImage ? (
+              <div
+                className="border-2 border-dashed border-primary/50 rounded p-12 text-center cursor-pointer hover:border-primary transition-colors bg-secondary/20 hover:bg-secondary/40"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-12 h-12 text-primary mx-auto mb-4 animate-bounce" />
+                <p className="text-foreground font-medium mb-2">Upload Photo</p>
+                <p className="text-sm text-muted-foreground">Click to select or drag and drop</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
+            ) : (
+              <>
+                {/* Progress Bar */}
+                {isProcessing && <ProgressBar progress={progress} />}
+
+                {/* Image Display */}
+                {enhancedImage ? (
+                  <BeforeAfterSlider
+                    before={originalImage}
+                    after={enhancedImage}
+                  />
+                ) : (
+                  <div className="bg-secondary/30 border border-primary/30 rounded overflow-hidden">
+                    <img
+                      src={originalImage}
+                      alt="Original"
+                      className="w-full h-auto max-h-96 object-contain"
+                    />
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleEnhance}
+                    disabled={isProcessing}
+                    className="btn-cyberpunk col-span-2 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Zap className="w-4 h-4" />
+                    {isProcessing ? 'Processing...' : 'Enhance Image'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setOriginalImage(null);
+                      setEnhancedImage(null);
+                      setShowHeroInfo(true);
+                    }}
+                    className="btn-cyberpunk flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear
+                  </button>
+                  {enhancedImage && (
+                    <ExportPanel image={enhancedImage} />
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Right Panel - Additional Features */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Quick Tips */}
+            <div className="bg-card border border-primary/30 p-4 rounded">
+              <h2 className="text-sm font-bold text-primary mb-3 tracking-wider">QUICK TIPS</h2>
+              <ul className="text-xs text-muted-foreground space-y-2">
+                <li>• Upload clear photos for best results</li>
+                <li>• Match device to your camera</li>
+                <li>• Select appropriate category</li>
+                <li>• Use Smart Presets for auto-enhancement</li>
+              </ul>
+            </div>
+
+            {/* Enhancement Features */}
+            <div className="bg-card border border-accent/30 p-4 rounded">
+              <h2 className="text-sm font-bold text-accent mb-3 tracking-wider">FEATURES</h2>
+              <ul className="text-xs text-muted-foreground space-y-2">
+                <li>✓ Face Enhancement</li>
+                <li>✓ Skin Tone Optimization</li>
+                <li>✓ Noise Removal</li>
+                <li>✓ Dynamic Lighting</li>
+                <li>✓ Detail Restoration</li>
+                <li>✓ HDR Processing</li>
+              </ul>
+            </div>
+
+            {/* Export Formats */}
+            <div className="bg-card border border-primary/30 p-4 rounded">
+              <h2 className="text-sm font-bold text-primary mb-3 tracking-wider">FORMATS</h2>
+              <ul className="text-xs text-muted-foreground space-y-2">
+                <li>• JPEG (Standard)</li>
+                <li>• PNG (Lossless)</li>
+                <li>• TIFF (Professional)</li>
+                <li>• Up to 8K Resolution</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Modals */}
+      {showHistory && <HistoryPanel history={history} onClose={() => setShowHistory(false)} />}
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      {showDeveloper && <DeveloperSection onClose={() => setShowDeveloper(false)} />}
+
+      {/* Footer */}
+      <footer className="border-t border-primary/20 bg-secondary/30 backdrop-blur-sm mt-16">
+        <div className="container mx-auto px-4 py-6 text-center text-xs text-muted-foreground">
+          <p>Smart AI Photo Enhancer © 2026 | Developed by Moataz Abu Wadih</p>
+        </div>
+      </footer>
+    </div>
+  );
+}

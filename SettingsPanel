@@ -1,0 +1,129 @@
+import { useState } from 'react';
+import { X, Moon, Sun, Palette } from 'lucide-react';
+
+interface SettingsPanelProps {
+  onClose: () => void;
+}
+
+export default function SettingsPanel({ onClose }: SettingsPanelProps) {
+  const [darkMode, setDarkMode] = useState(true);
+  const [greenIntensity, setGreenIntensity] = useState(100);
+  const [contrast, setContrast] = useState(100);
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+      <div className="bg-card border border-primary/30 rounded max-w-md w-full">
+        <div className="border-b border-primary/30 p-4 flex justify-between items-center">
+          <h2 className="text-lg font-bold text-primary tracking-wider">SETTINGS</h2>
+          <button
+            onClick={onClose}
+            className="btn-cyberpunk p-2"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-6">
+          {/* Dark Mode Toggle */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-bold text-primary tracking-wider flex items-center gap-2">
+                {darkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                DARK MODE
+              </label>
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`relative w-10 h-6 rounded border-2 transition-colors ${
+                  darkMode
+                    ? 'border-accent bg-accent/20'
+                    : 'border-primary/30 bg-secondary/20'
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 w-5 h-5 rounded bg-primary transition-transform ${
+                    darkMode ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">Toggle dark/light theme</p>
+          </div>
+
+          {/* Green Intensity */}
+          <div>
+            <label className="text-sm font-bold text-accent tracking-wider flex items-center gap-2 mb-2">
+              <Palette className="w-4 h-4" />
+              GREEN INTENSITY
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={greenIntensity}
+              onChange={(e) => setGreenIntensity(Number(e.target.value))}
+              className="w-full cursor-pointer"
+              style={{
+                accentColor: '#00ff88',
+              }}
+            />
+            <p className="text-xs text-muted-foreground mt-1">{greenIntensity}%</p>
+          </div>
+
+          {/* Contrast */}
+          <div>
+            <label className="text-sm font-bold text-primary tracking-wider flex items-center gap-2 mb-2">
+              <Palette className="w-4 h-4" />
+              CONTRAST
+            </label>
+            <input
+              type="range"
+              min="50"
+              max="150"
+              value={contrast}
+              onChange={(e) => setContrast(Number(e.target.value))}
+              className="w-full cursor-pointer"
+              style={{
+                accentColor: '#00d9ff',
+              }}
+            />
+            <p className="text-xs text-muted-foreground mt-1">{contrast}%</p>
+          </div>
+
+          {/* Auto-save Settings */}
+          <div>
+            <label className="text-sm font-bold text-primary tracking-wider mb-2 block">
+              AUTO-SAVE SETTINGS
+            </label>
+            <button
+              onClick={() => {
+                localStorage.setItem('photoEnhancerSettings', JSON.stringify({
+                  darkMode,
+                  greenIntensity,
+                  contrast,
+                }));
+              }}
+              className="btn-cyberpunk w-full text-sm"
+            >
+              Save Settings
+            </button>
+          </div>
+
+          {/* Reset to Default */}
+          <div>
+            <button
+              onClick={() => {
+                setDarkMode(true);
+                setGreenIntensity(100);
+                setContrast(100);
+                localStorage.removeItem('photoEnhancerSettings');
+              }}
+              className="w-full px-3 py-2 text-xs border border-destructive text-destructive rounded hover:bg-destructive/10 transition-colors"
+            >
+              Reset to Default
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

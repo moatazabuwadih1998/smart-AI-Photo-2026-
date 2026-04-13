@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AI Photo Enhancer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0F0F0F;
+            --accent: #10B981;
+            --secondary: #F4A261;
+            --support: #E07A5F;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+            --glow-accent: 0 0 20px rgba(16, 185, 129, 0.3);
+            --glow-secondary: 0 0 20px rgba(244, 162, 97, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #0F0F0F 0%, #1a1a1a 50%, #0F0F0F 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            background-attachment: fixed;
+        }
+
+        /* Particle Background */
+        .particle-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0.3; }
+            50% { transform: translateY(-100px) translateX(50px); opacity: 0.8; }
+        }
+
+        /* Glass Morphism */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+        }
+
+        /* Clay Morphism Button */
+        .btn-clay {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: capitalize;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-clay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn-clay:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, #0d9970 100%);
+            color: #000;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3), inset -2px -2px 5px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.5), inset -2px -2px 5px rgba(0, 0, 0, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0px);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+            box-shadow: var(--glow-accent);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            right: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            right: 24px;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-card {
+            padding: 20px;
+            border-radius: 16px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        .select-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .select-group label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover {
+            border-color: var(--accent);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: var(--glow-accent);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 60px 40px;
+            border-radius: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(244, 162, 97, 0.05) 100%);
+            border: 1px solid var(--glass-border);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px dashed var(--accent);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(16, 185, 129, 0.02);
+        }
+
+        .upload-section:hover {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: var(--secondary);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-section h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .upload-section p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .preview-card {
+            padding: 20px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-card img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 12px;
+            object-fit: contain;
+        }
+
+        .preview-label {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: var(--glass-bg);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Slider */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+            cursor: ew-resize;
+            z-index: 10;
+            transform: translateX(-50%);
+        }
+
+        .slider-handle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+
+        .slider-before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .slider-before img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-btn:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--accent);
+            box-shadow: var(--glow-accent);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--secondary) 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: var(--glow-accent);
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            margin-top: 60px;
+            padding: 40px 0;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .pricing-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .pricing-card {
+            padding: 30px;
+            border-radius: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 1px solid var(--glass-border);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+        }
+
+        .pricing-card.featured {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(244, 162, 97, 0.05) 100%);
+            border: 2px solid var(--accent);
+            transform: scale(1.05);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: var(--accent);
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .pricing-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .pricing-price {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--accent);
+        }
+
+        .pricing-period {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .pricing-features li {
+            font-size: 13px;
+            padding: 8px 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pricing-features li::before {
+            content: '✓ ';
+            color: var(--accent);
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        /* Developer Section */
+        .developer-section {
+            margin-top: 60px;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(244, 162, 97, 0.02) 100%);
+        }
+
+        .developer-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #000;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .developer-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .developer-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .developer-bio {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            width: 44px;
+            height: 44px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .social-link:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+            transform: translateY(-4px);
+            box-shadow: var(--glow-accent);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .preview-section {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .hero {
+                padding: 40px 20px;
+                min-height: 300px;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .hero p {
+                font-size: 14px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .btn-clay {
+                width: 100%;
+            }
+
+            .upload-section {
+                padding: 30px 20px;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-bar {
+                flex-direction: column;
+            }
+
+            .control-btn {
+                min-width: auto;
+            }
+
+            .developer-section {
+                padding: 30px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .hero {
+                padding: 30px 15px;
+            }
+
+            .hero h1 {
+                font-size: 22px;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .header-controls {
+                gap: 10px;
+            }
+
+            .btn-clay {
+                padding: 10px 20px;
+                font-size: 12px;
+            }
+
+            .modal-content {
+                padding: 25px;
+                width: 95%;
+            }
+
+            .social-links {
+                gap: 10px;
+            }
+
+            .social-link {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
+        /* Loading Animation */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--glass-bg);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Floating Action */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s ease;
+            color: #000;
+            font-weight: 700;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .fab-container {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .fab {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Background -->
+    <div class="particle-bg" id="particleBg"></div>
+
+    <!-- Header -->
+    <header class="glass">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>Smart AI Photo Enhancer</span>
+                </div>
+                <div class="header-controls">
+                    <div class="control-group">
+                        <label>Dark Mode</label>
+                        <div class="toggle-switch active" id="darkModeToggle"></div>
+                    </div>
+                    <button class="btn-clay btn-secondary" onclick="openModal('settingsModal')">⚙️ Settings</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero glass">
+            <div class="hero-content">
+                <h1>تعديل صورك بالذكاء الاصطناعي في ثواني</h1>
+                <p>تحسين احترافي للصور مع الحفاظ على الهوية الأصلية. تقنية AI متقدمة لنتائج طبيعية وواقعية.</p>
+                <div class="hero-buttons">
+                    <button class="btn-clay btn-primary" onclick="document.getElementById('fileInput').click()">ابدأ الآن</button>
+                    <button class="btn-clay btn-secondary" onclick="openModal('aboutModal')">تعرف أكثر</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Device Selector -->
+                <div class="sidebar-card glass">
+                    <div class="card-title">اختر الجهاز</div>
+                    <div class="select-group">
+                        <select id="deviceSelect" onchange="updatePrompt()">
+                            <option value="vivo X300 Ultra">vivo X300 Ultra</option>
+                            <option value="iPhone 17 Pro Max">iPhone 17 Pro Max</option>
+                            <option value="Xiaomi 17 Ultra">Xiaomi 17 Ultra</option>
+                            <option value="Samsung Galaxy S26 Ultra">Samsung Galaxy S26 Ultra</option>
+                            <option value="Google Pixel 10 Pro XL">Google Pixel 10 Pro XL</option>
+                            <option value="Oppo Find X9 Ultra">Oppo Find X9 Ultra</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Category Selector -->
+                <div class="sidebar-card glass">
+                    <div class="card-title">الفئة</div>
+                    <div class="select-group">
+                        <select id="categorySelect" onchange="updatePrompt()">
+                            <option value="Selfie">Selfie</option>
+                            <option value="صور ليلية">صور ليلية</option>
+                            <option value="صور قديمة">صور قديمة</option>
+                            <option value="Low Quality">Low Quality</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Style Selector -->
+                <div class="sidebar-card glass">
+                    <div class="card-title">الأسلوب</div>
+                    <div class="select-group">
+                        <select id="styleSelect" onchange="updatePrompt()">
+                            <option value="Smart AI">Smart AI</option>
+                            <option value="Ultra Realistic">Ultra Realistic</option>
+                            <option value="HDR Boost">HDR Boost</option>
+                            <option value="Custom Filters">Custom Filters</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- AI Prompt -->
+                <div class="sidebar-card glass">
+                    <div class="card-title">AI Prompt</div>
+                    <div id="promptDisplay" style="font-size: 12px; color: var(--text-secondary); line-height: 1.6; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; max-height: 150px; overflow-y: auto;">
+                        حسّن الصورة كما لو أنها ملتقطة بكاميرا iPhone 17 Pro Max، بفئة Selfie، بأسلوب Smart AI...
+                    </div>
+                    <button class="btn-clay btn-secondary" style="width: 100%; margin-top: 10px;" onclick="copyPrompt()">📋 Copy</button>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Upload Section -->
+                <div class="upload-section glass" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📸</div>
+                    <h3>رفع الصور</h3>
+                    <p>اسحب الصور هنا أو انقر للاختيار</p>
+                    <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileUpload(event)">
+                </div>
+
+                <!-- Preview Section -->
+                <div id="previewSection" style="display: none;">
+                    <div class="preview-section">
+                        <!-- Before -->
+                        <div class="preview-card glass">
+                            <div class="preview-label">Before</div>
+                            <img id="beforeImage" src="" alt="Before">
+                        </div>
+
+                        <!-- After with Slider -->
+                        <div class="preview-card glass" id="afterContainer">
+                            <div class="preview-label">After</div>
+                            <div class="slider-container">
+                                <img id="afterImage" src="" alt="After">
+                                <div class="slider-before">
+                                    <img id="sliderBeforeImage" src="" alt="Slider Before">
+                                </div>
+                                <div class="slider-handle" id="sliderHandle"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress-label">
+                            <span>Processing...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="controls-bar">
+                        <button class="control-btn" onclick="enhanceImage()">⚡ Enhance</button>
+                        <button class="control-btn" onclick="exportImage('jpg')">💾 JPG</button>
+                        <button class="control-btn" onclick="exportImage('png')">💾 PNG</button>
+                        <button class="control-btn" onclick="undoAction()">↶ Undo</button>
+                        <button class="control-btn" onclick="redoAction()">↷ Redo</button>
+                        <button class="control-btn" onclick="clearAll()">🗑️ Clear</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Pricing Section -->
+        <section class="pricing-section">
+            <h2 class="pricing-title">خطط الأسعار</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card glass">
+                    <h3 class="pricing-name">Free</h3>
+                    <div class="pricing-price">$0</div>
+                    <div class="pricing-period">للأبد</div>
+                    <ul class="pricing-features">
+                        <li>تحسين الصور الأساسي</li>
+                        <li>دقة حتى 4K</li>
+                        <li>5 صور يومياً</li>
+                        <li>بدون إعلانات</li>
+                    </ul>
+                    <button class="btn-clay btn-secondary" style="width: 100%;">اختر الخطة</button>
+                </div>
+
+                <div class="pricing-card glass featured">
+                    <div class="pricing-badge">الأشهر</div>
+                    <h3 class="pricing-name">Pro</h3>
+                    <div class="pricing-price">$9.99</div>
+                    <div class="pricing-period">شهرياً</div>
+                    <ul class="pricing-features">
+                        <li>تحسين متقدم</li>
+                        <li>دقة حتى 8K</li>
+                        <li>صور غير محدودة</li>
+                        <li>Batch Processing</li>
+                        <li>فلاتر مخصصة</li>
+                        <li>أولوية الدعم</li>
+                    </ul>
+                    <button class="btn-clay btn-primary" style="width: 100%;">اشترك الآن</button>
+                </div>
+
+                <div class="pricing-card glass">
+                    <h3 class="pricing-name">Studio</h3>
+                    <div class="pricing-price">$29.99</div>
+                    <div class="pricing-period">شهرياً</div>
+                    <ul class="pricing-features">
+                        <li>جميع ميزات Pro</li>
+                        <li>API Access</li>
+                        <li>دعم الفريق</li>
+                        <li>تدريب مخصص</li>
+                        <li>SLA مضمون</li>
+                    </ul>
+                    <button class="btn-clay btn-secondary" style="width: 100%;">اتصل بنا</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Developer Section -->
+        <section class="developer-section">
+            <div class="developer-avatar">MA</div>
+            <h2 class="developer-name">Moataz Alderawi</h2>
+            <p class="developer-title">AI Photo Enhancement Specialist | Developer from Jordan</p>
+            <p class="developer-bio">
+                متخصص في تطوير تطبيقات تحسين الصور بالذكاء الاصطناعي. مكرس لتقديم حلول احترافية وسهلة الاستخدام لتحسين جودة الصور مع الحفاظ على الهوية الأصلية.
+            </p>
+            <div class="social-links">
+                <a href="https://x.com" class="social-link" title="Twitter/X">𝕏</a>
+                <a href="https://instagram.com" class="social-link" title="Instagram">📸</a>
+                <a href="https://github.com" class="social-link" title="GitHub">🐙</a>
+                <a href="https://youtube.com" class="social-link" title="YouTube">▶️</a>
+                <a href="mailto:moatazdz2026@gmail.com" class="social-link" title="Email">✉️</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div class="fab-container">
+        <div class="fab" onclick="openModal('historyModal')" title="History">📜</div>
+        <div class="fab" onclick="openModal('settingsModal')" title="Settings">⚙️</div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeModal('settingsModal')">✕</div>
+            <h2 class="modal-title">الإعدادات</h2>
+            <div class="modal-body">
+                <div class="select-group" style="margin-bottom: 20px;">
+                    <label style="margin-bottom: 10px; display: block;">اللغة</label>
+                    <select onchange="changeLanguage(this.value)">
+                        <option value="ar">العربية</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="select-group" style="margin-bottom: 20px;">
+                    <label style="margin-bottom: 10px; display: block;">جودة التصدير</label>
+                    <select id="exportQuality">
+                        <option value="4k">4K (2160p)</option>
+                        <option value="8k">8K (4320p)</option>
+                    </select>
+                </div>
+                <div class="select-group">
+                    <label style="margin-bottom: 10px; display: block;">صيغة التصدير الافتراضية</label>
+                    <select id="defaultFormat">
+                        <option value="jpg">JPG</option>
+                        <option value="png">PNG</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-clay btn-primary" style="flex: 1;" onclick="closeModal('settingsModal')">حفظ</button>
+                <button class="btn-clay btn-secondary" style="flex: 1;" onclick="closeModal('settingsModal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeModal('historyModal')">✕</div>
+            <h2 class="modal-title">سجل الصور</h2>
+            <div class="modal-body" id="historyList">
+                <p style="text-align: center; color: var(--text-secondary);">لا توجد صور في السجل</p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-clay btn-secondary" style="width: 100%;" onclick="closeModal('historyModal')">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeModal('aboutModal')">✕</div>
+            <h2 class="modal-title">عن التطبيق</h2>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px;">
+                    <strong>Smart AI Photo Enhancer</strong> هو تطبيق ويب متقدم لتحسين الصور باستخدام تقنيات الذكاء الاصطناعي.
+                </p>
+                <p style="margin-bottom: 15px;">
+                    <strong>الميزات الرئيسية:</strong>
+                </p>
+                <ul style="list-style: none; padding-right: 20px;">
+                    <li>✓ تحسين احترافي للصور</li>
+                    <li>✓ دعم دقة 8K</li>
+                    <li>✓ معالجة دفعية</li>
+                    <li>✓ فلاتر مخصصة</li>
+                    <li>✓ واجهة سهلة الاستخدام</li>
+                </ul>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-clay btn-primary" style="width: 100%;" onclick="closeModal('aboutModal')">موافق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global State
+        let currentImage = null;
+        let processedImage = null;
+        let history = [];
+        let undoStack = [];
+        let redoStack = [];
+        let isProcessing = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            loadHistory();
+            updatePrompt();
+        });
+
+        // Particle Background
+        function createParticles() {
+            const bg = document.getElementById('particleBg');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 20) + 's';
+                bg.appendChild(particle);
+            }
+        }
+
+        // File Upload
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentImage = e.target.result;
+                    document.getElementById('beforeImage').src = currentImage;
+                    document.getElementById('sliderBeforeImage').src = currentImage;
+                    document.getElementById('previewSection').style.display = 'block';
+                    processedImage = currentImage;
+                    document.getElementById('afterImage').src = currentImage;
+                    undoStack = [];
+                    redoStack = [];
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Enhance Image
+        function enhanceImage() {
+            if (!currentImage) return;
+            
+            isProcessing = true;
+            document.getElementById('progressContainer').classList.add('active');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress > 100) progress = 100;
+                
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    undoStack.push(processedImage);
+                    processedImage = currentImage;
+                    document.getElementById('afterImage').src = processedImage;
+                    
+                    setTimeout(() => {
+                        document.getElementById('progressContainer').classList.remove('active');
+                        isProcessing = false;
+                        addToHistory(currentImage, processedImage);
+                    }, 500);
+                }
+            }, 300);
+        }
+
+        // Export Image
+        function exportImage(format) {
+            if (!processedImage) return;
+            
+            const link = document.createElement('a');
+            link.href = processedImage;
+            link.download = `enhanced-photo.${format}`;
+            link.click();
+        }
+
+        // Undo/Redo
+        function undoAction() {
+            if (undoStack.length > 0) {
+                redoStack.push(processedImage);
+                processedImage = undoStack.pop();
+                document.getElementById('afterImage').src = processedImage;
+            }
+        }
+
+        function redoAction() {
+            if (redoStack.length > 0) {
+                undoStack.push(processedImage);
+                processedImage = redoStack.pop();
+                document.getElementById('afterImage').src = processedImage;
+            }
+        }
+
+        // Clear All
+        function clearAll() {
+            currentImage = null;
+            processedImage = null;
+            document.getElementById('previewSection').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            undoStack = [];
+            redoStack = [];
+        }
+
+        // Update Prompt
+        function updatePrompt() {
+            const device = document.getElementById('deviceSelect').value;
+            const category = document.getElementById('categorySelect').value;
+            const style = document.getElementById('styleSelect').value;
+            
+            const prompt = `حسّن الصورة باحتراف شديد كما لو أنها ملتقطة بكاميرا ${device}، بفئة ${category}، بأسلوب ${style}، مع تحسين بصري طبيعي جداً يركز على وضوح الوجه والتفاصيل الدقيقة، مع الحفاظ الكامل 100% على ملامح الوجه، لون البشرة الطبيعي، ونسيج الجلد الحقيقي بدون أي تنعيم أو تأثير بلاستيكي.`;
+            
+            document.getElementById('promptDisplay').textContent = prompt;
+            localStorage.setItem('lastSettings', JSON.stringify({ device, category, style }));
+        }
+
+        // Copy Prompt
+        function copyPrompt() {
+            const prompt = document.getElementById('promptDisplay').textContent;
+            navigator.clipboard.writeText(prompt).then(() => {
+                alert('تم نسخ الـ Prompt');
+            });
+        }
+
+        // History
+        function addToHistory(before, after) {
+            history.unshift({
+                id: Date.now(),
+                before: before,
+                after: after,
+                timestamp: new Date().toLocaleString('ar-SA')
+            });
+            
+            if (history.length > 10) history.pop();
+            localStorage.setItem('photoHistory', JSON.stringify(history));
+            updateHistoryDisplay();
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('photoHistory');
+            if (saved) {
+                history = JSON.parse(saved);
+                updateHistoryDisplay();
+            }
+        }
+
+        function updateHistoryDisplay() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">لا توجد صور في السجل</p>';
+                return;
+            }
+            
+            list.innerHTML = history.map(item => `
+                <div style="padding: 10px; border-bottom: 1px solid var(--glass-border); cursor: pointer;" onclick="loadHistoryItem(${item.id})">
+                    <div style="font-size: 12px; color: var(--text-secondary);">${item.timestamp}</div>
+                    <div style="margin-top: 8px; display: flex; gap: 10px;">
+                        <img src="${item.before}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">
+                        <span style="color: var(--accent);">→</span>
+                        <img src="${item.after}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadHistoryItem(id) {
+            const item = history.find(h => h.id === id);
+            if (item) {
+                currentImage = item.before;
+                processedImage = item.after;
+                document.getElementById('beforeImage').src = currentImage;
+                document.getElementById('afterImage').src = processedImage;
+                document.getElementById('sliderBeforeImage').src = currentImage;
+                document.getElementById('previewSection').style.display = 'block';
+                closeModal('historyModal');
+            }
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Language Change
+        function changeLanguage(lang) {
+            localStorage.setItem('language', lang);
+            // Reload page or update UI based on language
+            alert('تم تغيير اللغة إلى: ' + (lang === 'ar' ? 'العربية' : 'English'));
+        }
+
+        // Slider Interaction
+        document.addEventListener('DOMContentLoaded', () => {
+            const slider = document.getElementById('sliderHandle');
+            const container = document.querySelector('.slider-container');
+            
+            if (slider && container) {
+                let isSliding = false;
+                
+                slider.addEventListener('mousedown', () => { isSliding = true; });
+                document.addEventListener('mouseup', () => { isSliding = false; });
+                
+                container.addEventListener('mousemove', (e) => {
+                    if (!isSliding) return;
+                    
+                    const rect = container.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const percent = (x / rect.width) * 100;
+                    
+                    if (percent >= 0 && percent <= 100) {
+                        slider.style.left = percent + '%';
+                        document.querySelector('.slider-before').style.width = percent + '%';
+                    }
+                });
+            }
+        });
+
+        // Close modal on outside click
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Load last settings
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('lastSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                document.getElementById('deviceSelect').value = settings.device;
+                document.getElementById('categorySelect').value = settings.category;
+                document.getElementById('styleSelect').value = settings.style;
+            }
+        });
+    </script>
+</body>
+</html>

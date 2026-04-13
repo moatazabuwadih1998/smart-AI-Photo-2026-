@@ -1,0 +1,98 @@
+import { useState } from 'react';
+import { Download, Share2, FileJson } from 'lucide-react';
+
+interface ExportPanelProps {
+  image: string;
+}
+
+export default function ExportPanel({ image }: ExportPanelProps) {
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const handleDownload = (format: string) => {
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = `enhanced-photo.${format.toLowerCase()}`;
+    link.click();
+    setShowExportMenu(false);
+  };
+
+  const handleShare = (platform: string) => {
+    const encodedImage = encodeURIComponent(image);
+    const urls: Record<string, string> = {
+      instagram: `https://www.instagram.com/`,
+      twitter: `https://twitter.com/intent/tweet?text=Check%20out%20my%20enhanced%20photo!`,
+      pinterest: `https://pinterest.com/pin/create/button/`,
+      youtube: `https://youtube.com/`,
+    };
+    if (urls[platform]) {
+      window.open(urls[platform], '_blank');
+    }
+    setShowExportMenu(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowExportMenu(!showExportMenu)}
+        className="btn-cyberpunk flex items-center justify-center gap-2 w-full"
+      >
+        <Download className="w-4 h-4" />
+        Export
+      </button>
+
+      {showExportMenu && (
+        <div className="absolute top-full mt-2 left-0 right-0 bg-card border border-primary/30 rounded shadow-lg z-10">
+          <div className="p-3 space-y-2">
+            <div className="text-xs font-bold text-primary tracking-wider mb-2">FORMAT</div>
+            <button
+              onClick={() => handleDownload('JPEG')}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-primary/20 rounded transition-colors"
+            >
+              JPEG (Standard)
+            </button>
+            <button
+              onClick={() => handleDownload('PNG')}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-primary/20 rounded transition-colors"
+            >
+              PNG (Lossless)
+            </button>
+            <button
+              onClick={() => handleDownload('TIFF')}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-primary/20 rounded transition-colors"
+            >
+              TIFF (Professional)
+            </button>
+
+            <div className="border-t border-primary/20 my-2" />
+
+            <div className="text-xs font-bold text-accent tracking-wider mb-2">SHARE</div>
+            <button
+              onClick={() => handleShare('instagram')}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-accent/20 rounded transition-colors"
+            >
+              📸 Instagram
+            </button>
+            <button
+              onClick={() => handleShare('twitter')}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-accent/20 rounded transition-colors"
+            >
+              𝕏 Twitter/X
+            </button>
+            <button
+              onClick={() => handleShare('pinterest')}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-accent/20 rounded transition-colors"
+            >
+              📌 Pinterest
+            </button>
+            <button
+              onClick={() => handleShare('youtube')}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-accent/20 rounded transition-colors"
+            >
+              ▶️ YouTube
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

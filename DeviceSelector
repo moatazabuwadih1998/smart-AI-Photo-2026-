@@ -1,0 +1,37 @@
+import { Smartphone } from 'lucide-react';
+
+const DEVICES = [
+  'vivo X300 Ultra',
+  'iPhone 17 Pro Max',
+  'Xiaomi 17 Ultra',
+  'Samsung Galaxy S26 Ultra',
+  'Google Pixel 10 Pro XL',
+  'Oppo Find X9 Ultra',
+];
+
+interface DeviceSelectorProps {
+  value: string;
+  onChange: (device: string) => void;
+}
+
+export default function DeviceSelector({ value, onChange }: DeviceSelectorProps) {
+  return (
+    <div className="space-y-2">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="input-cyberpunk w-full text-sm"
+      >
+        {DEVICES.map((device) => (
+          <option key={device} value={device}>
+            {device}
+          </option>
+        ))}
+      </select>
+      <p className="text-xs text-muted-foreground flex items-center gap-1">
+        <Smartphone className="w-3 h-3" />
+        Select your camera device
+      </p>
+    </div>
+  );
+}

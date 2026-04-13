@@ -1,0 +1,78 @@
+import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+
+interface LivePreviewProps {
+  image: string;
+  filters?: {
+    brightness?: number;
+    contrast?: number;
+    saturation?: number;
+    sharpness?: number;
+  };
+}
+
+export default function LivePreview({ image, filters = {} }: LivePreviewProps) {
+  const [showPreview, setShowPreview] = useState(true);
+
+  const getFilterStyle = () => {
+    const {
+      brightness = 100,
+      contrast = 100,
+      saturation = 100,
+      sharpness = 100,
+    } = filters;
+
+    return {
+      filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) blur(${100 - sharpness}%)`,
+    };
+  };
+
+  return (
+    <div className="bg-card border border-primary/30 rounded overflow-hidden">
+      <div className="flex items-center justify-between p-3 border-b border-primary/20">
+        <h3 className="text-xs font-bold text-primary tracking-wider">LIVE PREVIEW</h3>
+        <button
+          onClick={() => setShowPreview(!showPreview)}
+          className="p-1 hover:bg-primary/20 rounded transition-colors"
+          title={showPreview ? 'Hide preview' : 'Show preview'}
+        >
+          {showPreview ? (
+            <Eye className="w-4 h-4 text-primary" />
+          ) : (
+            <EyeOff className="w-4 h-4 text-muted-foreground" />
+          )}
+        </button>
+      </div>
+
+      {showPreview && (
+        <div className="relative overflow-hidden bg-secondary/30">
+          <img
+            src={image}
+            alt="Live Preview"
+            style={getFilterStyle()}
+            className="w-full h-auto max-h-64 object-contain transition-all duration-200"
+          />
+
+          {/* Filter Info Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+            <div className="text-xs text-white space-y-1">
+              {Object.entries(filters).map(([key, value]) => (
+                <div key={key} className="flex justify-between">
+                  <span className="capitalize">{key}:</span>
+                  <span className="text-accent">{value}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!showPreview && (
+        <div className="p-8 text-center text-muted-foreground">
+          <EyeOff className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-xs">Preview hidden</p>
+        </div>
+      )}
+    </div>
+  );
+}

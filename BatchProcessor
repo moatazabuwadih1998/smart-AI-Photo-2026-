@@ -1,0 +1,159 @@
+import { useState } from 'react';
+import { Upload, Trash2, Play, CheckCircle, AlertCircle } from 'lucide-react';
+
+interface BatchItem {
+  id: string;
+  file: File;
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  progress: number;
+}
+
+interface BatchProcessorProps {
+  onProcessComplete?: (results: any[]) => void;
+}
+
+export default function BatchProcessor({ onProcessComplete }: BatchProcessorProps) {
+  const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const newItems: BatchItem[] = files.map((file) => ({
+      id: Math.random().toString(36),
+      file,
+      status: 'pending',
+      progress: 0,
+    }));
+    setBatchItems([...batchItems, ...newItems]);
+  };
+
+  const removeItem = (id: string) => {
+    setBatchItems(batchItems.filter((item) => item.id !== id));
+  };
+
+  const processBatch = async () => {
+    setIsProcessing(true);
+
+    for (const item of batchItems) {
+      if (item.status === 'pending') {
+        // Update status to processing
+        setBatchItems((prev) =>
+          prev.map((i) =>
+            i.id === item.id ? { ...i, status: 'processing' } : i
+          )
+        );
+
+        // Simulate processing
+        for (let i = 0; i <= 100; i += 10) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          setBatchItems((prev) =>
+            prev.map((it) =>
+              it.id === item.id ? { ...it, progress: i } : it
+            )
+          );
+        }
+
+        // Mark as completed
+        setBatchItems((prev) =>
+          prev.map((i) =>
+            i.id === item.id ? { ...i, status: 'completed', progress: 100 } : i
+          )
+        );
+      }
+    }
+
+    setIsProcessing(false);
+
+    if (onProcessComplete) {
+      onProcessComplete(batchItems);
+    }
+  };
+
+  const clearCompleted = () => {
+    setBatchItems(batchItems.filter((item) => item.status !== 'completed'));
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-accent" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-destructive" />;
+      case 'processing':
+        return <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />;
+      default:
+        return <div className="w-4 h-4 border-2 border-primary/30 rounded-full" />;
+    }
+  };
+
+  return (
+    <div className="bg-card border border-primary/30 rounded p-4 space-y-4">
+      <h3 className="text-sm font-bold text-primary tracking-wider">BATCH PROCESSING</h3>
+
+      {/* File Input */}
+      <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-primary/50 rounded cursor-pointer hover:border-primary transition-colors">
+        <Upload className="w-5 h-5 text-primary" />
+        <span className="text-sm text-foreground">Select multiple images</span>
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleFilesSelect}
+          className="hidden"
+        />
+      </label>
+
+      {/* Batch Items List */}
+      {batchItems.length > 0 && (
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {batchItems.map((item) => (
+            <div key={item.id} className="flex items-center gap-2 p-2 bg-secondary/30 rounded">
+              {getStatusIcon(item.status)}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-foreground truncate">{item.file.name}</p>
+                {item.status === 'processing' && (
+                  <div className="w-full bg-secondary/50 rounded h-1 mt-1">
+                    <div
+                      className="bg-primary h-1 rounded transition-all"
+                      style={{ width: `${item.progress}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+              {item.status !== 'processing' && (
+                <button
+                  onClick={() => removeItem(item.id)}
+                  className="p-1 hover:bg-destructive/20 rounded transition-colors"
+                >
+                  <Trash2 className="w-4 h-4 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      {batchItems.length > 0 && (
+        <div className="space-y-2 border-t border-primary/20 pt-4">
+          <button
+            onClick={processBatch}
+            disabled={isProcessing}
+            className="w-full btn-cyberpunk text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Play className="w-4 h-4" />
+            {isProcessing ? 'Processing...' : 'Process Batch'}
+          </button>
+          {batchItems.some((item) => item.status === 'completed') && (
+            <button
+              onClick={clearCompleted}
+              className="w-full px-3 py-2 text-xs border border-primary/30 text-foreground rounded hover:bg-primary/10 transition-colors"
+            >
+              Clear Completed
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
